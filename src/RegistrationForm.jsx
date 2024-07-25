@@ -83,7 +83,7 @@ const RegistrationForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
       <ToastContainer />
-      <div className="max-w-xl w-full bg-white p-8 rounded-lg shadow-lg">
+      <div className="max-w-xl w-full bg-white p-8 rounded-lg shadow-lg my-5">
         <h1 className="text-3xl font-bold mb-5 text-center text-gray-800">Student Registration</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -120,7 +120,7 @@ const RegistrationForm = () => {
           </div>
           <div>
             <label className="block mb-1 text-gray-600">University</label>
-            <select name="university" value={formData.university} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <select required name="university" value={formData.university} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
               <option value="">Select University</option>
               {universities.map((university, index) => (
                 <option key={index} value={university}>{university}</option>
