@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { getCountryCallingCode } from "libphonenumber-js";
 import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 
 // Utility function to capitalize the first letter of a string
@@ -14,12 +15,10 @@ const RegistrationForm = () => {
     name: "",
     email: "",
     lastQualification: "",
-    mobileCode: "",
-    mobileNumber: "",
+    mobilePhone: "",  // Changed to single mobilePhone field
     state: "",
     city: "",
     country: "",
-    university: "",
   });
 
   const [locationData, setLocationData] = useState({
@@ -30,6 +29,7 @@ const RegistrationForm = () => {
   });
 
   const [universities, setUniversities] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch user location data using GeoJS API
@@ -57,7 +57,7 @@ const RegistrationForm = () => {
       country: locationData.country,
       city: locationData.city,
       state: locationData.state,
-      mobileCode: locationData.mobileCode,
+      mobilePhone: locationData.mobileCode,  // Set mobilePhone to the initial mobileCode
     }));
   }, [locationData]);
 
@@ -78,11 +78,10 @@ const RegistrationForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "mobileCode" || name === "mobileNumber") {
+    if (name === "mobilePhone") {
       setFormData((prevState) => ({
         ...prevState,
-        mobileCode: name === "mobileCode" ? value : prevState.mobileCode,
-        mobileNumber: name === "mobileNumber" ? value : prevState.mobileNumber,
+        mobilePhone: value,
       }));
     } else {
       setFormData((prevState) => ({
@@ -101,8 +100,7 @@ const RegistrationForm = () => {
         ...prevState,
         city: "",
         state: "",
-        mobileCode: "",
-        mobileNumber: "",
+        mobilePhone: "",  // Reset mobilePhone
       }));
     }
   };
@@ -110,9 +108,8 @@ const RegistrationForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     toast.success("Your request is submitted, you will be contacted shortly!");
-    setTimeout(() => {
-      window.location.reload();
-    }, 6000); // Delay to allow the toast to be visible
+    // Redirect to the new page with the selected country
+    navigate(`/universities?country=${formData.country}`);
   };
 
   return (
@@ -123,7 +120,7 @@ const RegistrationForm = () => {
           University Finder
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          {/* <div>
             <label className="block mb-1 text-gray-600">Name</label>
             <input
               required
@@ -157,7 +154,7 @@ const RegistrationForm = () => {
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-          </div>
+          </div> */}
           <div>
             <label className="block mb-1 text-gray-600">Country</label>
             <input
@@ -191,48 +188,18 @@ const RegistrationForm = () => {
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
-          <div className="flex items-center">
-            <div className="flex-none w-24">
-              <label className="block mb-1 text-gray-600">Mobile Code</label>
-              <input
-                required
-                type="text"
-                name="mobileCode"
-                value={formData.mobileCode}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="+1"
-              />
-            </div>
-            <div className="flex-grow ml-2">
-              <label className="block mb-1 text-gray-600">Mobile Number</label>
-              <input
-                required
-                type="text"
-                name="mobileNumber"
-                value={formData.mobileNumber}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="1234567890"
-              />
-            </div>
-          </div>
+
           <div>
-            <label className="block mb-1 text-gray-600">University</label>
-            <select
+            <label className="block mb-1 text-gray-600">Mobile Phone</label>
+            <input
               required
-              name="university"
-              value={formData.university}
+              type="text"
+              name="mobilePhone"
+              value={formData.mobilePhone}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">Select University</option>
-              {universities.map((university, index) => (
-                <option key={index} value={university}>
-                  {university}
-                </option>
-              ))}
-            </select>
+              placeholder="+1234567890"
+            />
           </div>
           <button
             type="submit"
