@@ -64,7 +64,7 @@ const RegistrationForm = () => {
   const fetchUniversities = async (country) => {
     try {
       const response = await axios.get(
-        `http://universities.hipolabs.com/search?country=${country}`
+        `https://universities.hipolabs.com/search?country=${country}`
       );
       const universityNames = response.data.map(
         (university) => university.name

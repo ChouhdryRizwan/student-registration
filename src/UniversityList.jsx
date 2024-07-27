@@ -15,7 +15,7 @@ const UniversityList = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://universities.hipolabs.com/search?country=${country}`
+          `https://universities.hipolabs.com/search?country=${country}`
         );
         setUniversities(response.data.map((uni) => uni.name));
         setLoading(false);
