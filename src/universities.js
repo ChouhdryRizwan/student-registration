@@ -1,7 +1,13 @@
-export const universitiesByCountry = {
-    PK: ['University of Karachi', 'Lahore University of Management Sciences', 'National University of Sciences and Technology'],
-    US: ['Harvard University', 'Stanford University', 'MIT'],
-    UK: ['University of Oxford', 'University of Cambridge', 'Imperial College London'],
-    GB: ['University of Oxford', 'University of Cambridge', 'Imperial College London'],
-    // Add more countries and universities here
-  };    
+// api/universities.js
+const axios = require('axios');
+
+export default async function handler(req, res) {
+  const { country } = req.query;
+
+  try {
+    const response = await axios.get(`http://universities.hipolabs.com/search?country=${country}`);
+    res.status(200).json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching universities' });
+  }
+}
