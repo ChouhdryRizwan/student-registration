@@ -12,13 +12,11 @@ const capitalizeFirstLetter = (string) => {
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    lastQualification: "",
-    mobilePhone: "",  // Changed to single mobilePhone field
+    mobilePhone: "",
     state: "",
     city: "",
     country: "",
+    phoneCode: "",  // Add phoneCode to formData
   });
 
   const [locationData, setLocationData] = useState({
@@ -28,8 +26,12 @@ const RegistrationForm = () => {
     mobileCode: "",
   });
 
-  const [universities, setUniversities] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
   const navigate = useNavigate();
+
+  const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7InVzZXJfZW1haWwiOiJtdWhhbW1hZHJpendhbnRhaGlyMjNAZ21haWwuY29tIiwiYXBpX3Rva2VuIjoiQ2lER3I2czBDZHdnVWxGMEVNcjMydDQtV2tIRjNHZ0Y0RGJaa2wyZ3Q0RmhzRDFwaENyN1VUZDBRUEdVbXRyUVRVMCJ9LCJleHAiOjE3MjI5Njg2ODR9.E2Lg3C1PZQdSDZMNP7w6NKjUIytHj84q-jXUSY6RtWI";
 
   useEffect(() => {
     // Fetch user location data using GeoJS API
@@ -44,9 +46,6 @@ const RegistrationForm = () => {
           state: capitalizeFirstLetter(data.region),
           mobileCode: `+${mobileCode}`,
         });
-
-        // Fetch universities based on the country
-        fetchUniversities(formattedCountry);
       })
       .catch((error) => console.error("Error fetching location data:", error));
   }, []);
@@ -57,60 +56,115 @@ const RegistrationForm = () => {
       country: locationData.country,
       city: locationData.city,
       state: locationData.state,
-      mobilePhone: locationData.mobileCode,  // Set mobilePhone to the initial mobileCode
+      mobilePhone: locationData.mobileCode,
     }));
   }, [locationData]);
 
-  const fetchUniversities = async (country) => {
+  const fetchCountries = async () => {
     try {
       const response = await axios.get(
-        `https://universities.hipolabs.com/search?country=${country}`
+        `https://www.universal-tutorial.com/api/countries/`,
+        {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        }
       );
-      const universityNames = response.data.map(
-        (university) => university.name
-      );
-      setUniversities(universityNames);
+      setCountries(response.data);
     } catch (error) {
-      console.error("Error fetching universities:", error);
+      console.error("Error fetching countries:", error);
+    }
+  };
+
+  const fetchStates = async (country) => {
+    try {
+      const response = await axios.get(
+        `https://www.universal-tutorial.com/api/states/${country}`,
+        {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        }
+      );
+      setStates(response.data);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
+
+  const fetchCities = async (state) => {
+    try {
+      const response = await axios.get(
+        `https://www.universal-tutorial.com/api/cities/${state}`,
+        {
+          headers: { Authorization: `Bearer ${apiToken}` },
+        }
+      );
+      setCities(response.data);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "mobilePhone") {
-      setFormData((prevState) => ({
-        ...prevState,
-        mobilePhone: value,
-      }));
-    } else {
-      setFormData((prevState) => ({
-        ...prevState,
-        [name]:
-          name === "country" || name === "city" || name === "state"
-            ? capitalizeFirstLetter(value)
-            : value,
-      }));
-    }
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
 
-    // Update universities and reset fields when country changes
     if (name === "country") {
-      fetchUniversities(capitalizeFirstLetter(value));
+      const selectedCountry = countries.find(
+        (country) => country.country_name.toLowerCase() === value.toLowerCase()
+      );
+      if (selectedCountry) {
+        setFormData((prevState) => ({
+          ...prevState,
+          phoneCode: `+${selectedCountry.country_phone_code}`,
+          state: "",
+          city: "",
+          mobilePhone: `+${selectedCountry.country_phone_code}`, // Update mobilePhone with new phoneCode
+        }));
+        fetchStates(selectedCountry.country_name);
+      }
+    } else if (name === "state") {
+      fetchCities(value);
       setFormData((prevState) => ({
         ...prevState,
         city: "",
-        state: "",
-        mobilePhone: "",  // Reset mobilePhone
       }));
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    toast.success("Your request is submitted, you will be contacted shortly!");
-    // Redirect to the new page with the selected country
+    const isCountryValid = countries.some(
+      (country) =>
+        country.country_name.toLowerCase() === formData.country.toLowerCase()
+    );
+    const isStateValid = states.some(
+      (state) => state.state_name.toLowerCase() === formData.state.toLowerCase()
+    );
+    const isCityValid = cities.some(
+      (city) => city.city_name.toLowerCase() === formData.city.toLowerCase()
+    );
+    if (!isCountryValid) {
+      alert("Please select a valid country from the list.");
+      return;
+    }
+    if (!isStateValid) {
+      alert("Please select a valid state from the list.");
+      return;
+    }
+    if (!isCityValid) {
+      alert("Please select a valid city from the list.");
+      return;
+    }
+
+    // toast.success("Your request is submitted, you will be contacted shortly!");
     navigate(`/universities?country=${formData.country}`);
   };
+
+  useEffect(() => {
+    fetchCountries();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
@@ -120,75 +174,60 @@ const RegistrationForm = () => {
           University Finder
         </h1>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* <div>
-            <label className="block mb-1 text-gray-600">Name</label>
-            <input
-              required
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-gray-600">Email</label>
-            <input
-              required
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-gray-600">
-              Last Qualification
-            </label>
-            <input
-              required
-              type="text"
-              name="lastQualification"
-              value={formData.lastQualification}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div> */}
           <div>
             <label className="block mb-1 text-gray-600">Country</label>
             <input
               required
               type="text"
+              list="countries"
               name="country"
               value={formData.country}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
+            <datalist id="countries">
+              {countries.map((country) => (
+                <option
+                  key={country.country_name}
+                  value={country.country_name}
+                />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="block mb-1 text-gray-600">State/Province</label>
             <input
               required
               type="text"
+              list="states"
               name="state"
               value={formData.state}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
+            <datalist id="states">
+              {states.map((state) => (
+                <option key={state.state_name} value={state.state_name} />
+              ))}
+            </datalist>
           </div>
           <div>
             <label className="block mb-1 text-gray-600">City</label>
             <input
               required
               type="text"
+              list="cities"
               name="city"
               value={formData.city}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
+            <datalist id="cities">
+              {cities.map((city) => (
+                <option key={city.city_name} value={city.city_name} />
+              ))}
+            </datalist>
           </div>
-
           <div>
             <label className="block mb-1 text-gray-600">Mobile Phone</label>
             <input
